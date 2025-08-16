@@ -1,6 +1,7 @@
 from __future__ import annotations
 import subprocess, json, sys, pathlib
 
+# Función para descargar audio de un video de YouTube
 def download_audio(url: str, out_dir: str = "outputs") -> dict:
     out = pathlib.Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)

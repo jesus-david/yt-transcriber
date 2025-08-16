@@ -6,16 +6,24 @@ from transcriber import transcribe
 from exporters.txt import write_txt
 from exporters.srt import write_srt
 
+# Función principal
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("url")
     ap.add_argument("--lang", default="es")
     ap.add_argument("--model", default="small", choices=["tiny","base","small","medium","large-v3"])
     ap.add_argument("--device", default="cuda", choices=["cuda","cpu"])
+    ap.add_argument("--compute", default=None, choices=["float16","int8_float16","int8"], help="Precisión/VRAM (por defecto: float16 en CUDA, int8 en CPU)")
     args = ap.parse_args()
 
     meta = download_audio(args.url, out_dir="outputs")
-    segs, info = transcribe(meta["audio_path"], lang=args.lang, model_size=args.model, device=args.device)
+    segs, info = transcribe(
+        meta["audio_path"], 
+        lang=args.lang, 
+        model_size=args.model, 
+        device=args.device,
+        compute_type=args.compute
+    )
 
     base = Path("outputs") / meta["video_id"]
     base.parent.mkdir(exist_ok=True, parents=True)
@@ -23,6 +31,7 @@ def main():
     write_txt(segs, f"{base}.txt")
     write_srt(segs, f"{base}.srt")
 
+    # Función para escribir transcripciones en formato JSON
     with open(f"{base}.json", "w", encoding="utf-8") as f:
         json.dump({"video": meta, "model": args.model, "info": {
             "language": getattr(info, "language", None),
